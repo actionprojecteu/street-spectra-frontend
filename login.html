@@ -1,0 +1,66 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<head>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="form">
+      <form class="register-form">
+        <input type="text" placeholder="name"/>
+        <input type="password" placeholder="password"/>
+        <input type="text" placeholder="email address"/>
+        <button>create</button>
+        <p class="message">Already registered? <a href="#">Sign In</a></p>
+      </form>
+      <form ref="loginForm"
+        id="loginForm"
+        class="login-form"
+        method="post"
+        action="http://localhost:8081/login">
+          <input id="nombre" name="nombre" type="text" placeholder="username"/>
+          <input id="clave" name="clave" type="password" placeholder="password"/>
+          <!-- <input type="submit" /> -->
+          <button>login</button>
+          <p class="message">Not registered? <a href="#">Create an account</a></p>
+          <p id="login-message" class="message"></p>
+      </form>
+    </div>
+  </div>
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
+<script>
+  $('.message a').click(function(){
+    $('form').animate({height: "toggle", opacity: "toggle"}, "slow");
+  });
+
+
+
+    $(document).ready(function() {
+
+
+       $('#loginForm').submit(function() {
+
+          $(this).ajaxSubmit({
+
+              error: function(xhr) {
+                $("#login-message").empty().text("Usuario incorrecto");
+                $("#login-message").removeClass("message");
+                $("#login-message").addClass("error-login");
+                //status('Error: ' + xhr.status);
+              },
+
+              success: function(response) {
+                  //$("#login-message").empty().text(response);
+                  //console.log(response);
+                  sessionStorage.token = response;
+                  window.location.replace("index.html");
+              }
+      });
+          //Very important line, it disable the page refresh.
+      return false;
+      });
+  });
+
+</script>

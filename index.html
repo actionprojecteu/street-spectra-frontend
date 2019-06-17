@@ -1,0 +1,185 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<head>
+  <script>
+  if (!sessionStorage.token){
+    window.location.replace("login.html");
+  }
+  </script>
+  <style>
+      input#camera_spectra{
+        display: inline-block;
+        width: 100%;
+        padding: 120px 0 0 0;
+        height: 100px;
+        overflow: hidden;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        background: url('https://cdn1.iconfinder.com/data/icons/hawcons/32/698578-icon-65-document-image-256.png') center center no-repeat #e4e4e4;
+        border-radius: 20px;
+        background-size: 60px 60px;
+      }
+      input#upload_spectra{
+        display: inline-block;
+        width: 100%;
+        padding: 120px 0 0 0;
+        height: 100px;
+        overflow: hidden;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        background: url('https://cdn1.iconfinder.com/data/icons/hawcons/32/698394-icon-130-cloud-upload-256.png') center center no-repeat #e4e4e4;
+        border-radius: 20px;
+        background-size: 60px 60px;
+      }
+      button#location{
+        display: inline-block;
+        width: 100%;
+        padding: 120px 0 0 0;
+        height: 100px;
+        overflow: hidden;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        background: url('https://cdn1.iconfinder.com/data/icons/hawcons/32/700232-icon-62-compass-256.png') center center no-repeat #e4e4e4;
+        border-radius: 20px;
+        background-size: 60px 60px;
+      }
+      #target{
+        max-width:100%;
+      }
+      .coordinates{
+        font-size: 12px;
+      }
+      .location{
+        font-size: 1.5vw;
+        max-width:100%;
+      }
+ </style>
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+ <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+  <div class="row">
+      <div class="col-md-3">
+          <center><h1>STREET SPECTRA</h1></center>
+      </div>
+  </div>
+  <div class="row" id="location_step">
+    <div class="col-md-3">
+      <button id="location"></button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-3">
+      <form ref="uploadForm"
+        id="uploadForm"
+        action="http://localhost:8081/observations"
+        method="post"
+        enctype="multipart/form-data">
+          <input id="camera_spectra" name="camera_spectra" type="file" style="visibility:hidden;display:none" accept="image/*" />
+          <input id="latitude" name="latitude" type="hidden" value="5.888" />
+          <input id="longitude" name="longitude" type="hidden" value="5.888" />
+          <input id="tstamp" name="tstamp" type="hidden"/>
+          <input id="upload_spectra" type="submit" style="visibility:hidden;display:none" value="Send!">
+          <span id = "status"></span>
+      </form>
+    </div>
+  </div>
+  <!-- Location -->
+  <div class="row location" id="location_container" style="visibility:hidden">
+    <div class="col-md-3">
+      <center>
+        <p id="latitude_p" class="location"><span id="latitude_text">Latitude:</span><span id="latitude_value"></span></p>
+        <p id="longitude_p" class="location"><span id="longitude_text">Longitude:</span><span id="longitude_value"></span></p>
+      <center>
+    </div>
+  </div>
+  <div class="row" id="image_container" style="visibility:hidden;display:none">
+      <div class="col-md-3">
+        <img id="target"/>
+      </div>
+  </div>
+</body>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
+<script>
+  $(document).ready(function() {
+
+     $('#uploadForm').submit(function() {
+        $("#status").empty().text("File is uploading...");
+        $(this).ajaxSubmit({
+
+            headers:{
+              'Authorization':'Bearer '+sessionStorage.token
+            },
+            error: function(xhr) {
+              status('Error: ' + xhr.status);
+            },
+            success: function(response) {
+                $("#status").empty().text(response);
+                console.log(response);
+            }
+    });
+        //Very important line, it disable the page refresh.
+    return false;
+    });
+
+    function formatDate(date) {
+      var minutes = date.getMinutes();
+      minutes = minutes < 10 ? '0'+minutes : minutes;
+      return date.getFullYear() + "-" + date.getMonth() + "-" + date.getDate() + "T" +
+              date.getHours()+":"+minutes+":"+date.getSeconds()+"Z";
+    }
+
+
+    function showImage(src,target) {
+      var fr=new FileReader();
+      // when image is loaded, set the src of the image where you want to display it
+      fr.onload = function(e) { target.src = this.result; };
+      src.addEventListener("change",function() {
+        // fill fr with image data
+        fr.readAsDataURL(src.files[0]);
+        $("#upload_spectra").css('visibility', 'visible');
+        $("#upload_spectra").css('display', '');
+
+        $("#tstamp").val(formatDate(new Date()))
+      });
+    }
+
+    var src = document.getElementById("camera_spectra");
+    var target = document.getElementById("target");
+    showImage(src,target);
+
+    $("#location").on('click', function(){
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position){
+
+            $("#location").css('background', '#4CAF50');
+            $("#location_container").css('visibility', 'visible');
+
+            $("#latitude_value").text(Number((position.coords.latitude).toFixed(3)));
+            $("#longitude_value").text(Number((position.coords.longitude).toFixed(3)));
+
+            $("#latitude").val(Number((position.coords.latitude).toFixed(3)));
+            $("#longitude").val(Number((position.coords.longitude).toFixed(3)));
+
+            $("#image_container").css('visibility', 'visible');
+            $("#image_container").css('display', '');
+
+            $("#camera_spectra").css('visibility', 'visible');
+            $("#camera_spectra").css('display', '');
+
+        });
+
+      } else {
+        window.alert("Geolocation is not present in this browser.")
+      }
+    });
+
+  });
+
+
+</script>
